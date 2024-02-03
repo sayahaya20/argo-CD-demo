@@ -1,1 +1,22 @@
-yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx
+  namespace: default
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: nginx
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: nginx
+    repoURL: https://github.com/bitnami/charts/tree/main/bitnami/nginx
+    targetRevision: 15.10.2
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
