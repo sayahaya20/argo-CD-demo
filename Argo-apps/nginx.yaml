@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     chart: nginx
-    repoURL: https://github.com/bitnami/charts/tree/main/bitnami/nginx
+    repoURL: https://github.com/bitnami/charts
     targetRevision: 15.10.2
   syncPolicy:
     automated:
