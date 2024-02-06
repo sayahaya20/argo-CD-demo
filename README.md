@@ -224,7 +224,7 @@ We used the source code of our application to deploy on Argo CD using the FAST A
 
 We can see the nginx app successfully created on the Argo CD UI
 
-![alt txt](./argocd_pics/spec_nginx_.png)
+![alt txt](./argocd_pics/spec_nginx.png)
 
 
 ## Conclusion
