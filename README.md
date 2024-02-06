@@ -22,7 +22,10 @@ The cluster name and project are 'demo-cluster' and 'agrocd-gke-demo' respective
     --project=agrocd-gke-demo
  $ gcloud container clusters get-credentials demo-cluster --region us-west1 --project=agrocd-gke-demo
 ```
-![alt text](http://url/to/img.png)
+![alt txt](./argocd_pics/cluster_create!.png)
+
+You can see the cluster been created on the cloud console 
+![alt txt](./argocd_pics/cluster_console.png)
 
 [Read more on creating an autopilot GKE cluster](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-an-autopilot-cluster)
 
@@ -36,36 +39,51 @@ To add the Argo CD Helm repository to your local Helm configuration, you can use
  $ helm repo add argo-cd https://argoproj.github.io/argo-helm
  $ helm repo update
 ```
+![alt txt](./argocd_pics/helm_repo_argo.png)
+
 This adds the Argo CD Helm repository with the name argo-cd and points it to the official Argo CD Helm charts repository.
 
 After running these commands, you can search for Argo CD charts and install them using Helm. For example, to search for available Argo CD charts, you can use:
 ```sh
 helm search repo argo-cd
 ```
+
 ### Deploy ArgoCD using its Helm Chart
 To install Argo CD, you can use a command like this:
 ```sh
 helm install argo-cd argo-cd/argo-cd
 ```
+![alt txt](./argocd_pics/helm_install_argo.png)
+
+![alt txt](./argocd_pics/argo_deployment.png)
+
+![alt txt](./argocd_pics/argo_k8_get_all.png)
+
+
 ### Expose the service
-making it accessible from outside the cluster, allowing external users or systems to interact with the application or service. 
+To make it accessible from outside the cluster, allowing external users or systems to interact with the application or service. This can be done by using the Nodeport, Loadbalancer or Ingress. We will be exposing this service using a loadbalancer with the command below:
+
 ```sh
 $ kubectl patch svc argocd-server -p '{"spec": {"type": "LoadBalancer"}}'
 ```
+
+![alt txt](./argocd_pics/argo_get_svc_external_exposed.png)
+
+An external ip has been created. This exposes Argo CD to the web.
+![alt txt](./argocd_pics/argo_login.png)
+
 
 ### Login to Argo CD
 Argo CD web UI using the external IP or domain assigned to the Argo CD service and log in with the default username (admin) and initial password obtained from the server logs with this command :
 ```sh
  kubectl get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
 ```
-```sh
-$ 
-``` 
-alternatively
+![alt txt](./argocd_pics/gte_argo_pass_login.png)
 
-```sh
-$ 
-``` 
+Hence you've reached the Argo CD landing page.
+
+
+![alt txt](./argocd_pics/ArgoCD_landing.png)
 
 ## Connect to the Github Repo
 
@@ -74,15 +92,19 @@ $
 To integrate a GitHub repository with Argo CD via the web UI, navigate to the Settings tab. Within the Repositories section, choose Connect Repo using HTTPS or SSH. Here, we used HTTPS.
 Input the GitHub repository URL and provide the necessary authentication details.
 
-
+![alt txt](./argocd_pics/git_https_connect.png)
 
 ### Syncing Argo CD to your repo
 A directory/folder in this repo will be created to point our Argo CD configuration. Argo CD will listen and sync any changes to the manifest files created here.
 
 ## Deploying Applications (In our Case NGINX )
 
-## Setting up Argo CD App on it's GUI
+## Configure Argo CD
 Argo CD manages and synchronizes applications with their Git definitions. Customize them based on your deployment and maintenance requirements. 
+![alt txt](./argocd_pics/create_argo_app_1.png)
+
+
+
 - Application Name:
 Choose a unique name for your application. In this example, 'argo' is used suggested as a convention for the root or main application.
 
@@ -100,6 +122,8 @@ Check this option if you want Argo CD to force the state defined in Git to the c
 
 - Set Deletion Finalizer:
 Check this option if you want to add a deletion finalizer to the app. This finalizer deletes both the app and associated resources on the cluster when they are no longer defined in Git.
+
+![alt txt](./argocd_pics/create_argo_app_2.png)
 
 - Repository URL:
 Set the Git repository URL previously configured for your application's manifests.
@@ -123,12 +147,15 @@ use this command to install:
 ```sh
 helm install my-release oci://registry-1.docker.io/bitnamicharts/nginx
 ```
+![alt txt](./argocd_pics/helm_repo_add_bitnami.png)
 
-- Prepare a manifest file and push to the folder you pointed to in the Argo CD cofiguration.
--- This YAML file is a Kubernetes manifest for an Argo CD Application. It defines how Argo CD should manage the deployment of an application named "nginx" in the Kubernetes cluster. Let's break down the key values:
--- apiVersion and kind: These fields specify the Kubernetes API version and kind of the resource, indicating that it's an Argo CD Application.
+![alt txt](./argocd_pics/helm_install_nginx_repo.png)
 
--- metadata: Metadata about the application, including its name, namespace, and finalizers.
+![alt txt](./argocd_pics/bitnami_gui_repo_add.png)
+
+- Prepare a manifest file and push to the folder you pointed to in the Argo CD cofiguration. 
+  
+
 
 ```sh
 apiVersion: argoproj.io/v1alpha1
@@ -154,3 +181,52 @@ spec:
     syncOptions:
     - CreateNamespace=true
 ```
+The YAML file is a Kubernetes manifest for an Argo CD Application. It defines how Argo CD should manage the deployment of an application named "nginx" in the Kubernetes cluster. Let's break down the key values:
+- apiVersion and kind: These fields specify the Kubernetes API version and kind of the resource, indicating that it's an Argo CD Application.
+
+- metadata: Metadata about the application including its name, namespace (within Argo CD), and finalizers (which deletes resources on both Argo CD and the k8s cluster when it is removed from Git)
+
+- destination: Specifies the target destination where the application will be deployed.
+- namespace: The Kubernetes namespace where the application resources will be created (in this case, "nginx").
+- server: The Kubernetes API server URL (in this case, the default service in the "default" namespace).
+
+- project: Indicates the Argo CD project to which the application belongs. In this case, it's the default project.
+
+- source: Describes the source of the application's manifests.
+  - chart: Specifies the Helm chart name ("nginx" in this case).
+  - repoURL: Specifies the Helm chart repository URL (Bitnami's public chart repository in this case).
+  - targetRevision: Specifies the version or revision of the Helm chart to use (version "15.10.2" in this case).
+- syncPolicy: Defines the synchronization policy for the application.
+  - automated: Specifies automated synchronization settings.
+    - prune: If set to true, Argo CD will delete Kubernetes resources that are no longer defined in the source repository.
+    - selfHeal: If set to true, Argo CD will attempt to reconcile the actual state in the cluster with the desired state defined in the source repository.
+  - syncOptions: Additional options passed to the synchronization process. In this case, it includes CreateNamespace=true, which means Argo CD will create the target namespace if it doesn't exist.  
+
+  ![alt txt](./argocd_pics/argo_nginx_gui.png)
+
+![alt txt](./argocd_pics/nginx_argo_child.png)
+
+  ![alt txt](./argocd_pics/nginx_landing.png)
+
+
+
+# Testing the Fast API
+## Deploying nginx using [FastAPI](https://argocd-api-htgvvmv22a-ew.a.run.app/docs)
+We used the source code of our application to deploy on Argo CD using the FAST API interface.
+
+![alt txt](./argocd_pics/fast_1.png)
+
+![alt txt](./argocd_pics/fast_2.png)
+
+![alt txt](./argocd_pics/fast_3.png)
+
+![alt txt](./argocd_pics/fast_4.png)
+
+We can see the nginx app successfully created on the Argo CD UI
+
+![alt txt](./argocd_pics/spec_nginx_.png)
+
+
+## Conclusion
+
+We were able to deploy an NGINX application with Google Kubernetes Engine (GKE) using ArgoCD and Helm Charts. This offers a streamlined and automated approach to managing Kubernetes deployments. Leveraging ArgoCD's GitOps principles and Helm Charts simplifies the deployment process, ensuring consistency and reliability in application delivery on GKE clusters. We also succesfully tested the FAST API interface to deploy the nginx app on Argo CD. This integration empowers teams to efficiently deploy and manage applications.
