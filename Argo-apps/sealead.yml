@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sealed-secrets
+  namespace: argocd
+spec:
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: 'sealed-secrets'
+  project: default
+  source:
+    helm:
+      valueFiles:
+        - values.yaml
+    repoURL: 'https://charts.bitnami.com/bitnami'
+    chart: 'sealed-secrets'
+    version: '2.14.2' # Update this to the appropriate version
+  syncPolicy:
+    syncOptions:
+    - createNamespace=true
+    automated:
+      allowEmpty: true
+      prune: true
+      selfHeal: true
