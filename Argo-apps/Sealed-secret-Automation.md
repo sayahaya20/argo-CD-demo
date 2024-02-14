@@ -130,7 +130,7 @@ Using an .env File
 generate_script.sh --file my_env_file.env
 ```
 ![alt txt](./sealed_images/file_1.png)
-![alt txt](./sealed_images/file_1.png)
+![alt txt](./sealed_images/file_2.png)
 
 NB: We created a sample .env file "my_env_file.env" 
 ![alt txt](./sealed_images/env.png)
